@@ -10,6 +10,8 @@ import { softmax } from "@/domain/tokens/sampling";
 import { gameStore, useGame } from "@/state/gameStore";
 import { useSession } from "@/state/sessionStore";
 import { createGridGeometry, createTerrainMaterial } from "../terrainMaterial";
+import { fx } from "@/fx/bus";
+import { PALETTE } from "@/design/palette";
 
 const N = 120;
 const SIZE = 20;
@@ -62,6 +64,13 @@ export function TokenDunes() {
   useEffect(() => () => (sim.geometry.dispose(), sim.material.dispose()), [sim]);
 
   const labels = useRef<(THREE.Group | null)[]>([]);
+
+  // A sampled word lifts off its dune: correct-outcome VFX at the exact site sampled.
+  useEffect(() => {
+    if (!last) return;
+    const [x, z] = SITES[last.index]!;
+    fx.emit({ kind: "rise", at: [x, sim.shown[last.index]! * H_MAX + 0.3, z], color: PALETTE.signal, count: 20 });
+  }, [last, sim]);
 
   useFrame((_, dt) => {
     // Ease displayed probabilities toward the target so a T change reads as sand moving.

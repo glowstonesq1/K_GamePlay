@@ -10,15 +10,19 @@ import type { ZoneId } from "@/domain/zones";
 import { PALETTE } from "@/design/palette";
 import { useGame } from "@/state/gameStore";
 import { BioGrid } from "./BioGrid";
+import { Particles } from "./fx/Particles";
+import { PostFX } from "./fx/PostFX";
+import { BackpropForge } from "./zones/BackpropForge";
 import { LossValley } from "./zones/LossValley";
+import { SkewArchive } from "./zones/SkewArchive";
 import { TokenDunes } from "./zones/TokenDunes";
 
 const VIEWS: Record<ZoneId, { pos: [number, number, number]; target: [number, number, number] }> = {
   hub: { pos: [8, 6, 8], target: [0, 0, 0] },
   "loss-valley": { pos: [13, 13, 15], target: [0, 1.5, 0] },
-  "backprop-forge": { pos: [8, 6, 8], target: [0, 0, 0] },
+  "backprop-forge": { pos: [0, 7.5, 12.5], target: [0, 1.6, -1.5] },
   "token-dunes": { pos: [0, 14, 17], target: [0, 1.5, 0] },
-  "skew-archive": { pos: [8, 6, 8], target: [0, 0, 0] },
+  "skew-archive": { pos: [0, 14, 12], target: [0, 0, 0.5] },
 };
 
 /** Glide the camera to each zone's establishing shot; the player can orbit freely after. */
@@ -72,9 +76,15 @@ export function Scene() {
           </Suspense>
         ) : zone === "token-dunes" ? (
           <TokenDunes />
+        ) : zone === "backprop-forge" ? (
+          <BackpropForge />
+        ) : zone === "skew-archive" ? (
+          <SkewArchive />
         ) : (
           <BioGrid />
         )}
+        <Particles />
+        <PostFX />
         <OrbitControls
           makeDefault
           enableDamping
