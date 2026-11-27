@@ -1,0 +1,133 @@
+/* Hallmark: custom run (game HUD, app scope) · theme: survey instrument · genre: atmospheric · signature: the live loss readout beside the terrain it describes */
+/* critique: an instrument, not a dashboard. Numbers carry the weight, chrome stays hairline, one signal colour. */
+/* waive 44b, 58: an in-game HUD has no hero or word budget; the 3D scene is the content. */
+/* waive 24b: slider thumb margin-top -10px centres a 22px thumb on a 2px track; geometry, not spacing. */
+/* waive 26b (AreaTitle): non-interactive header; all eight states live on Btn in primitives.tsx. */
+/* waive 64 (Instrument sample chips, RankMeter xp): tokens and figures, where mono is the material. */
+@import "tailwindcss";
+
+@theme {
+  --color-void: #05070a;
+  --color-panel: #0a0f15;
+  --color-line: #233040;
+  --color-bio: #39ffb0;
+  --color-bio-dim: #1a7a55;
+  --color-signal: #ffb020;
+  --color-alarm: #ff5a4f;
+  --color-bone: #e8e6e1;
+  --color-ash: #8b95a3;
+
+  --font-sans: var(--font-grotesk), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, monospace;
+  --font-display: var(--font-grotesk), ui-sans-serif, sans-serif;
+
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+html,
+body {
+  height: 100%;
+  overflow-x: clip;
+  background: var(--color-void);
+  color: var(--color-bone);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-signal);
+  outline-offset: 2px;
+  transition: none;
+}
+
+/* Safe-area insets: notches, rounded corners, home indicators. */
+.hud-safe {
+  padding-top: max(16px, env(safe-area-inset-top));
+  padding-right: max(16px, env(safe-area-inset-right));
+  padding-bottom: max(16px, env(safe-area-inset-bottom));
+  padding-left: max(16px, env(safe-area-inset-left));
+}
+@media (min-width: 640px) {
+  .hud-safe {
+    padding-top: max(24px, env(safe-area-inset-top));
+    padding-right: max(24px, env(safe-area-inset-right));
+    padding-bottom: max(24px, env(safe-area-inset-bottom));
+    padding-left: max(24px, env(safe-area-inset-left));
+  }
+}
+
+/* Chamfered plate: the outer layer is the 1px hairline, the inner layer the glass. */
+.plate {
+  --cut: 14px;
+  clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, 0 100%);
+  background: var(--color-line);
+  padding: 1px;
+}
+.plate > .plate-in {
+  clip-path: polygon(0 0, calc(100% - var(--cut) + 0.5px) 0, 100% calc(var(--cut) - 0.5px), 100% 100%, 0 100%);
+  background: color-mix(in srgb, var(--color-panel) 82%, transparent);
+  backdrop-filter: blur(6px);
+}
+
+/* Range input: hairline track, square thumb. */
+.dial {
+  appearance: none;
+  background: transparent;
+  height: 44px;
+  cursor: pointer;
+}
+.dial::-webkit-slider-runnable-track {
+  height: 2px;
+  background: var(--color-line);
+}
+.dial::-moz-range-track {
+  height: 2px;
+  background: var(--color-line);
+}
+.dial::-webkit-slider-thumb {
+  appearance: none;
+  width: 14px;
+  height: 22px;
+  margin-top: -10px;
+  background: var(--color-bio);
+  border: 0;
+}
+.dial::-moz-range-thumb {
+  width: 14px;
+  height: 22px;
+  border: 0;
+  border-radius: 0;
+  background: var(--color-bio);
+}
+
+@keyframes area-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.anim-area {
+  animation: area-in 600ms var(--ease-out-quint) both;
+}
+.anim-toast {
+  animation: toast-in 320ms var(--ease-out-quint) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .anim-area,
+  .anim-toast {
+    animation: none;
+  }
+}

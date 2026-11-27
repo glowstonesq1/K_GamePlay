@@ -1,0 +1,9 @@
+node_modules
+.next
+coverage
+.env*
+*.tsbuildinfo
+next-env.d.ts
+
+# static export
+/out
