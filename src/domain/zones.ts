@@ -68,7 +68,9 @@ export const ZONES: Readonly<Record<ZoneId, ZoneDef>> = {
     concept: "Next-token sampling",
     brief: "The tallest dune is the likeliest word. Temperature moves the sand.",
     controls: ["temperature"],
-    unlockedBy: "forge.chain-rule",
+    // Opens alongside Z2 rather than after it: Z2's content lands in Module 6, and a
+    // hard chain would wall off Z3 and Z4 until then.
+    unlockedBy: "valley.first-descent",
   },
   "skew-archive": {
     id: "skew-archive",

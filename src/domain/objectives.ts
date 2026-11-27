@@ -22,8 +22,9 @@ export const OBJECTIVES = {
   "valley.diverge": {
     zone: "loss-valley",
     xp: 50,
-    // PEDAGOGY: Blowing up the run on purpose is how you learn where η stops working.
-    label: "Overshoot until the loss explodes",
+    // PEDAGOGY: Breaking the run on purpose is how you learn where η stops working.
+    // Fires when a step makes the loss go UP, which small-η GD never does.
+    label: "Push η until a step makes the loss go up",
   },
   "forge.chain-rule": {
     zone: "backprop-forge",

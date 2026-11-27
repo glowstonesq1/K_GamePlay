@@ -1,4 +1,6 @@
 // src/domain/hyperparams.ts
+import { VALLEY } from "./loss/presets";
+import { etaRegime } from "./optim/gd";
 
 export type Hyperparam = "learningRate" | "temperature" | "sampleSkew";
 
@@ -83,12 +85,18 @@ export function formatHyperparam(p: Hyperparam, v: number): string {
 export function describeHyperparam(p: Hyperparam, v: number): string {
   switch (p) {
     case "learningRate":
-      // TODO(M2): these bands are placeholders. Replace with the real stability bound
-      // from the landscape: on a quadratic bowl GD diverges once η > 2 / λ_max(∇²L).
-      if (v < 3e-3) return "Barely moving. You'll get there, eventually.";
-      if (v <= 0.1) return "Steady steps downhill.";
-      if (v <= 0.5) return "Big strides. Expect to overshoot near the floor.";
-      return "Too hot. Each step leaps past the minimum and loss climbs.";
+      // PEDAGOGY: bands come from the terrain's real curvature, ηλ_max (see etaRegime).
+      switch (etaRegime(v, VALLEY.lambdaMax)) {
+        case "crawl":
+          return "Barely moving. You'll get there, eventually.";
+        case "smooth":
+          return "Steady steps. Every one lowers the loss.";
+        case "oscillate":
+          return "In the steepest pocket, steps now bounce across the floor before settling.";
+        case "diverge":
+          return "Past 2/λ. In the sharp pocket each step overshoots and the loss climbs.";
+      }
+      break;
     case "temperature":
       if (v < 0.5) return "Near-greedy. The top token wins almost every time.";
       if (v < 0.9) return "Sharpened. Confident, a little repetitive.";
@@ -101,4 +109,5 @@ export function describeHyperparam(p: Hyperparam, v: number): string {
       if (v < 0.7) return "One group dominates the archive. The rest blur.";
       return "The model has barely seen anyone outside the majority.";
   }
+  return "";
 }
