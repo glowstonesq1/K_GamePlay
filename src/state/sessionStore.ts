@@ -11,6 +11,7 @@ import { runArchive, type ArchiveRun } from "@/domain/bias/archive";
 import type { Snapshot } from "@/domain/nn/protocol";
 import { fx } from "@/fx/bus";
 import { gameStore } from "./gameStore";
+import { isZoneUnlocked, type ZoneId } from "@/domain/zones";
 
 /*
  * Transient, per-visit simulation state, one slice per zone. Never persisted: a
@@ -41,7 +42,23 @@ export const GAP_FIXED_PTS = 5;
 /** Feature-space x above which the avatar is standing in group B's region. */
 export const REGION_B_X = 0.4;
 
+/**
+ * A portal jump between worlds. The camera owns the timing (it knows when it has reached
+ * the node), the store owns the facts. Phases:
+ *   dive   — camera accelerates into the target node (or pulls away, going home)
+ *   emerge — the world has switched; camera settles onto its establishing shot
+ */
+export interface Portal {
+  from: ZoneId;
+  to: ZoneId;
+  /** World-space point to dive into (a hub node). null = pull back instead. */
+  at: [number, number, number] | null;
+  phase: "dive" | "emerge";
+}
+
 interface SessionState {
+  portal: Portal | null;
+
   // Loss Valley
   probe: GdState | null;
   probeStart: Vec2 | null;
@@ -72,6 +89,12 @@ interface SessionState {
 }
 
 interface SessionActions {
+  /** Start a portal jump. Returns false if locked, already there, or mid-jump. */
+  travel: (to: ZoneId, at?: [number, number, number] | null) => boolean;
+  /** Called by the camera at the bottom of the dive: switch worlds, begin emerging. */
+  commitPortal: () => void;
+  endPortal: () => void;
+
   placeProbe: (theta: Vec2) => void;
   setProbe: (s: GdState) => void;
   setRunning: (r: boolean) => void;
@@ -109,6 +132,22 @@ function checkArchive(get: () => SessionStore) {
 }
 
 export const sessionStore = createStore<SessionStore>()((set, get) => ({
+  portal: null,
+
+  travel: (to, at = null) => {
+    const g = gameStore.getState();
+    if (get().portal || g.currentZone === to || !isZoneUnlocked(to, g.completed)) return false;
+    set({ portal: { from: g.currentZone, to, at, phase: "dive" }, running: false });
+    return true;
+  },
+  commitPortal: () => {
+    const p = get().portal;
+    if (!p || p.phase !== "dive") return;
+    gameStore.getState().travelTo(p.to);
+    set({ portal: { ...p, phase: "emerge" } });
+  },
+  endPortal: () => set({ portal: null }),
+
   probe: null,
   probeStart: null,
   running: false,
@@ -217,6 +256,9 @@ gameStore.subscribe((s, prev) => {
   sessionStore.setState({ archive: runArchive(s.sampleSkew) });
   checkArchive(sessionStore.getState);
 });
+
+/** The HUD's single question about the portal. */
+export const selectTransitioning = (s: SessionStore) => s.portal !== null;
 
 export function useSession<T>(selector: (s: SessionStore) => T): T {
   return useStore(sessionStore, selector);

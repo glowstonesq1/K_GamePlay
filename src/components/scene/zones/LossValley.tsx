@@ -35,7 +35,7 @@ function Terrain() {
     const grid = sampleTerrain(VALLEY, GRID_N);
     return {
       geometry: createGridGeometry(grid.n, grid.size, grid.heights, grid.loss),
-      material: createTerrainMaterial({ valueMax: VALLEY.lossMax, contourStep: 0.25 }),
+      material: createTerrainMaterial({ valueMax: VALLEY.lossMax, contourStep: 0.25, low: PALETTE.cyan, line: PALETTE.cyanDim, peak: PALETTE.rose }),
       hf: toRapierHeightfield(grid),
     };
   }, []);
@@ -146,11 +146,16 @@ function Guide() {
         lastWritten.current = s;
         session.setProbe(s);
         if (ended) session.setRunning(false);
-        if (s.status === "converged") session.award("valley.first-descent");
+        if (s.status === "converged") {
+          session.award("valley.first-descent");
+          // PEDAGOGY: converged means ∇L ≈ 0, so the only question left is *which* floor.
+          const g = VALLEY.minima[0]!;
+          if (Math.hypot(s.theta[0] - g.theta[0], s.theta[1] - g.theta[1]) < 0.1) session.award("valley.bullseye");
+        }
         if (s.rises > 0) session.award("valley.diverge");
       }
       if (s.status === "converged" && lastStatus.current !== "converged") {
-        fx.emit({ kind: "rise", at: surface(s.theta[0], s.theta[1], 0.3).toArray(), color: PALETTE.bio, count: 36 });
+        fx.emit({ kind: "rise", at: surface(s.theta[0], s.theta[1], 0.3).toArray(), color: PALETTE.cyan, count: 36 });
       }
       lastStatus.current = s.status;
     }
@@ -221,7 +226,7 @@ function Guide() {
         {/* Html ignores parent visibility, so only mount the bubble once the guide exists. */}
         {probe && (
           <Html position={[0, 1.0, 0]} center distanceFactor={11} zIndexRange={[6, 0]} style={{ pointerEvents: "none" }}>
-            <p className="w-[17rem] border border-line bg-panel/85 px-3 py-2 text-center text-[15px] leading-snug text-bone">
+            <p className="w-[17rem] rounded-2xl border border-white/10 bg-black/55 px-4 py-2.5 text-center text-[15px] leading-snug text-bone backdrop-blur-md">
               {line}
             </p>
           </Html>
@@ -247,8 +252,8 @@ function SlopeField() {
     const m = new THREE.InstancedMesh(geo, mat, arrows.length);
     const maxMag = Math.max(...arrows.map((a) => a.mag));
     const dummy = new THREE.Object3D();
-    const lo = new THREE.Color(PALETTE.bioDim);
-    const hi = new THREE.Color(PALETTE.bio);
+    const lo = new THREE.Color(PALETTE.cyanDim);
+    const hi = new THREE.Color(PALETTE.cyan);
     arrows.forEach((a, i) => {
       dummy.position.copy(surface(a.theta[0], a.theta[1], 0.12));
       dummy.rotation.set(0, Math.atan2(a.dir[0], a.dir[1]), 0);
@@ -275,7 +280,7 @@ function OracleRoute() {
     const pts = oracle.points.map(([x, z]) => surface(x, z, 0.08));
     const g = new THREE.BufferGeometry().setFromPoints(pts);
     g.setDrawRange(0, 0);
-    const line = new THREE.Line(g, new THREE.LineBasicMaterial({ color: PALETTE.bio, toneMapped: false }));
+    const line = new THREE.Line(g, new THREE.LineBasicMaterial({ color: PALETTE.cyan, toneMapped: false }));
     return { line, count: pts.length, end: pts.at(-1)! };
   }, [oracle]);
   useEffect(() => {
@@ -299,7 +304,7 @@ function OracleRoute() {
       <primitive object={built.line} />
       <mesh position={built.end} rotation={[-Math.PI / 2, 0, 0]}>
         <ringGeometry args={[0.35, 0.45, 40]} />
-        <meshBasicMaterial color={PALETTE.bio} toneMapped={false} side={THREE.DoubleSide} />
+        <meshBasicMaterial color={PALETTE.cyan} toneMapped={false} side={THREE.DoubleSide} />
       </mesh>
     </>
   );

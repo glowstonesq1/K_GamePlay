@@ -125,7 +125,7 @@ export function Particles() {
       else if (e.kind === "shock") spawnShock(e.at, e.color, e.radius ?? 1.5);
       else if (e.kind === "reward") {
         const t = controls?.target ?? new THREE.Vector3();
-        spawnRise([t.x, t.y + 0.5, t.z], PALETTE.bio, 40);
+        spawnRise([t.x, t.y + 0.5, t.z], PALETTE.cyan, 40);
       }
     });
   }, [pool, rings, controls]);

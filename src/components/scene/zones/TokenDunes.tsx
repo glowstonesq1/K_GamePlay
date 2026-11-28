@@ -56,7 +56,7 @@ export function TokenDunes() {
     const heights = new Float32Array(v * v);
     const values = new Float32Array(v * v);
     const geometry = createGridGeometry(N, SIZE, heights, values);
-    const material = createTerrainMaterial({ valueMax: H_MAX * 0.6, contourStep: 0.35 });
+    const material = createTerrainMaterial({ valueMax: H_MAX * 0.6, contourStep: 0.35, low: PALETTE.violet, line: PALETTE.violetDim });
     material.uniforms.uInvert!.value = 1; // here, high = likely = bright
     const shown = softmax(LOGITS, gameStore.getState().temperature);
     return { basis, geometry, material, shown, dirty: { v: true } };
@@ -117,7 +117,7 @@ export function TokenDunes() {
           <Html center distanceFactor={24} zIndexRange={[5, 0]} style={{ pointerEvents: "none" }}>
             <div
               data-hit={last?.token === tok.text}
-              className="dune-label whitespace-nowrap rounded-sm border border-line bg-panel/80 px-2 py-0.5 font-mono text-[14px] text-bone data-[hit=true]:border-signal data-[hit=true]:text-signal"
+              className="dune-label whitespace-nowrap rounded-full border border-white/10 bg-black/50 px-2.5 py-0.5 backdrop-blur-sm font-mono text-[14px] text-bone data-[hit=true]:border-signal data-[hit=true]:text-signal"
             >
               {tok.text} <span className="text-ash">{(target[i]! * 100).toFixed(target[i]! < 0.01 ? 2 : 0)}%</span>
             </div>

@@ -11,14 +11,23 @@ import { PALETTE } from "@/design/palette";
  *
  * Vertex attribute `aValue` is the scalar field (loss, or probability mass) per vertex.
  */
-export function createTerrainMaterial(opts: { valueMax: number; contourStep: number }) {
+export function createTerrainMaterial(opts: {
+  valueMax: number;
+  contourStep: number;
+  low: string;
+  line: string;
+  /** Colour the top of the range bleeds into. Omit for no peak tint. */
+  peak?: string;
+}) {
   return new THREE.ShaderMaterial({
     uniforms: {
       uValueMax: { value: opts.valueMax },
       uStep: { value: opts.contourStep },
-      uLow: { value: new THREE.Color(PALETTE.bio) },
+      uLow: { value: new THREE.Color(opts.low) },
       uHigh: { value: new THREE.Color(PALETTE.ridge) },
-      uLine: { value: new THREE.Color(PALETTE.bioDim) },
+      uLine: { value: new THREE.Color(opts.line) },
+      uPeak: { value: new THREE.Color(opts.peak ?? PALETTE.ridge) },
+      uPeakAmt: { value: opts.peak ? 1 : 0 },
       uFog: { value: new THREE.Color(PALETTE.void) },
       uFogNear: { value: 18 },
       uFogFar: { value: 46 },
@@ -38,8 +47,8 @@ export function createTerrainMaterial(opts: { valueMax: number; contourStep: num
       }
     `,
     fragmentShader: /* glsl */ `
-      uniform float uValueMax, uStep, uFogNear, uFogFar, uInvert;
-      uniform vec3 uLow, uHigh, uLine, uFog;
+      uniform float uValueMax, uStep, uFogNear, uFogFar, uInvert, uPeakAmt;
+      uniform vec3 uLow, uHigh, uLine, uFog, uPeak;
       varying float vValue;
       varying vec3 vNormal;
       varying float vDepth;
@@ -56,6 +65,9 @@ export function createTerrainMaterial(opts: { valueMax: number; contourStep: num
         vec3 base = mix(uLow * 0.55, uHigh, pow(t, 0.55));
         float diffuse = 0.35 + 0.65 * max(dot(normalize(vNormal), normalize(vec3(0.35, 1.0, 0.25))), 0.0);
         vec3 col = base * diffuse;
+
+        // High loss reads as heat: ridges warm toward the peak colour, floors stay cold.
+        col = mix(col, uPeak * (0.45 + 0.55 * diffuse), uPeakAmt * smoothstep(0.62, 1.0, t) * 0.6);
 
         // Basin floors glow: the eye should find low loss before the HUD tells it.
         col += uLow * exp(-t * 7.0) * 0.45;
