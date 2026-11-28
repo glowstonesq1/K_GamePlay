@@ -32,9 +32,9 @@ export function Dial({ param, mark }: { param: Hyperparam; mark?: { value: numbe
       <div className="flex items-baseline justify-between gap-3">
         <label htmlFor={id} className="text-[13px] text-ash">
           {spec.label} <span className="font-mono text-bone">{spec.symbol}</span>
-          {spec.scale === "log" && <span className="ml-1.5 text-bio-dim">log scale</span>}
+          {spec.scale === "log" && <span className="ml-1.5 text-accent/60">log scale</span>}
         </label>
-        <output htmlFor={id} className="font-mono text-xl tabular-nums text-bio">
+        <output htmlFor={id} className="font-mono text-xl tabular-nums text-accent">
           {readout}
         </output>
       </div>

@@ -48,14 +48,14 @@ describe("hyperparams", () => {
     s.getState().setHyperparam("temperature", 0); // T = 0 would divide by zero in softmax
     expect(s.getState().temperature).toBe(0.1);
     s.getState().setHyperparam("learningRate", Number.NaN);
-    expect(s.getState().learningRate).toBe(0.01);
+    expect(s.getState().learningRate).toBe(0.05);
     s.getState().setHyperparam("sampleSkew", 7);
     expect(s.getState().sampleSkew).toBe(1);
   });
 
   it("log slider centres T on 1.0 and round-trips", () => {
     expect(fromSlider("temperature", 0.5)).toBeCloseTo(1, 10);
-    for (const v of [1e-4, 3e-3, 0.05, 1]) {
+    for (const v of [0.01, 0.03, 0.05, 1]) {
       expect(fromSlider("learningRate", toSlider("learningRate", v))).toBeCloseTo(v, 10);
     }
   });

@@ -16,9 +16,11 @@ interface Spec {
 
 export const HYPERPARAMS: Readonly<Record<Hyperparam, Spec>> = {
   learningRate: {
-    min: 1e-4,
+    // 0.01 already crawls on this terrain; 2/λ_max ≈ 0.254 sits inside the range, so
+    // the player can find both sides of the stability edge with one dial.
+    min: 0.01,
     max: 1,
-    initial: 1e-2,
+    initial: 0.05,
     scale: "log",
     symbol: "η",
     label: "Learning rate",

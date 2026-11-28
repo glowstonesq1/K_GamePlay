@@ -56,7 +56,7 @@ function People() {
   );
 
   const dummy = useMemo(() => new THREE.Object3D(), []);
-  const cYes = useMemo(() => new THREE.Color(PALETTE.bio), []);
+  const cYes = useMemo(() => new THREE.Color(PALETTE.rose), []);
   const cNo = useMemo(() => new THREE.Color(PALETTE.signal), []);
   const cWrong = useMemo(() => new THREE.Color(PALETTE.alarm), []);
   const cFar = useMemo(() => new THREE.Color(PALETTE.ridge), []);
@@ -131,7 +131,7 @@ function Boundaries() {
         pts.push(toWorld(x, y).setY(0.03));
       }
     }
-    return new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: PALETTE.bio, toneMapped: false }));
+    return new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: PALETTE.rose, toneMapped: false }));
   }, [model]);
   useEffect(() => () => fit.geometry.dispose(), [fit]);
   useEffect(() => () => truth.geometry.dispose(), [truth]);
@@ -165,7 +165,7 @@ function Floor({ onWalk }: { onWalk: (p: THREE.Vector3) => void }) {
       {/* Region divide: a thin lit seam, labelled in words on both sides. */}
       <mesh position={[bx, 0.01, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <planeGeometry args={[0.04, 15]} />
-        <meshBasicMaterial color={PALETTE.bioDim} />
+        <meshBasicMaterial color={PALETTE.roseDim} />
       </mesh>
       <Html position={[bx - 4, 0.2, -6.6]} center distanceFactor={18} zIndexRange={[5, 0]} style={{ pointerEvents: "none" }}>
         <span className="whitespace-nowrap text-[15px] text-bone">Group A region</span>
@@ -243,7 +243,7 @@ function Surveyor({ target }: { target: React.MutableRefObject<THREE.Vector3> })
     <>
       <mesh ref={ring} rotation={[-Math.PI / 2, 0, 0]}>
         <ringGeometry args={[PERCEPTION_R - 0.06, PERCEPTION_R, 64]} />
-        <meshBasicMaterial color={PALETTE.bio} transparent opacity={0.55} toneMapped={false} />
+        <meshBasicMaterial color={PALETTE.rose} transparent opacity={0.55} toneMapped={false} />
       </mesh>
       <group ref={root}>
         <group ref={body}>
@@ -257,7 +257,7 @@ function Surveyor({ target }: { target: React.MutableRefObject<THREE.Vector3> })
           </mesh>
           <mesh position={[0, 0.52, 0.17]}>
             <boxGeometry args={[0.26, 0.07, 0.05]} />
-            <meshBasicMaterial color={PALETTE.bio} toneMapped={false} />
+            <meshBasicMaterial color={PALETTE.rose} toneMapped={false} />
           </mesh>
         </group>
       </group>

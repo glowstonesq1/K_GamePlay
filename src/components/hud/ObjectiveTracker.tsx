@@ -27,7 +27,7 @@ export function ObjectiveTracker() {
         type="button"
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
-        className="-m-1 flex min-h-11 w-[calc(100%+0.5rem)] items-center justify-between p-1 text-left"
+        className="-m-1 flex min-h-11 w-[calc(100%+0.5rem)] items-center justify-between rounded-xl p-1 text-left"
       >
         <span className="text-[13px] text-ash">Objectives</span>
         <span className="font-mono text-[13px] tabular-nums text-ash">
@@ -43,7 +43,7 @@ export function ObjectiveTracker() {
                 key={id}
                 className={`flex items-start gap-2.5 text-[15px] leading-snug ${done ? "text-ash line-through decoration-ash/60" : id === next ? "text-bone" : "text-bone/70"}`}
               >
-                <span className={done ? "text-bio" : id === next ? "text-signal" : "text-ash"}>
+                <span className={done ? "text-accent" : id === next ? "text-signal" : "text-ash"}>
                   <CheckIcon done={done} />
                 </span>
                 <span className="min-w-0 flex-1">{OBJECTIVES[id].label}</span>

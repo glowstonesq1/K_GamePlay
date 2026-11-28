@@ -1,6 +1,6 @@
 // src/app/layout.tsx
 import type { Metadata, Viewport } from "next";
-import { JetBrains_Mono, Space_Grotesk } from "next/font/google";
+import { Geist, Instrument_Serif, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
 const jetbrains = JetBrains_Mono({
@@ -9,19 +9,27 @@ const jetbrains = JetBrains_Mono({
   display: "swap",
 });
 
-const grotesk = Space_Grotesk({
+const geist = Geist({
   subsets: ["latin"],
-  variable: "--font-grotesk",
+  variable: "--font-geist",
+  display: "swap",
+});
+
+// Display face for world names only: an observatory-plate serif against a quiet sans.
+const serif = Instrument_Serif({
+  subsets: ["latin"],
+  weight: "400",
+  variable: "--font-serif",
   display: "swap",
 });
 
 export const metadata: Metadata = {
   title: "Cogniterra",
-  description: "Walk the math. A playable atlas of how machines learn.",
+  description: "A cosmic observatory of how machines learn. Four worlds, each one a piece of the math you can touch.",
 };
 
 export const viewport: Viewport = {
-  themeColor: "#05070a",
+  themeColor: "#050508",
   viewportFit: "cover",
 };
 
@@ -46,7 +54,7 @@ const EXPORT_CSP = [
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${jetbrains.variable} ${grotesk.variable}`}>
+    <html lang="en" className={`${jetbrains.variable} ${geist.variable} ${serif.variable}`}>
       <head>
         {process.env.STATIC_EXPORT === "1" && <meta httpEquiv="Content-Security-Policy" content={EXPORT_CSP} />}
         <meta name="referrer" content="strict-origin-when-cross-origin" />

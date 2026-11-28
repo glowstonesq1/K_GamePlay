@@ -40,7 +40,7 @@ function DecisionFloor() {
       uniforms: {
         uP: { value: t },
         uA: { value: new THREE.Color(PALETTE.signal) },
-        uB: { value: new THREE.Color(PALETTE.bio) },
+        uB: { value: new THREE.Color(PALETTE.gold) },
         uBase: { value: new THREE.Color(PALETTE.void) },
       },
       vertexShader: /* glsl */ `
@@ -95,7 +95,7 @@ function DataPoints() {
     );
     const d = new THREE.Object3D();
     const a = new THREE.Color(PALETTE.signal);
-    const b = new THREE.Color(PALETTE.bio);
+    const b = new THREE.Color(PALETTE.gold);
     data.X.forEach(([x, y], i) => {
       d.position.copy(toWorld(x!, y!)).setY(0.12);
       d.updateMatrix();
@@ -137,7 +137,7 @@ function Network() {
     const all = NODE_POS.flat();
     const m = new THREE.InstancedMesh(
       new THREE.SphereGeometry(0.17, 16, 12),
-      new THREE.MeshStandardMaterial({ color: PALETTE.ridge, emissive: PALETTE.bioDim, emissiveIntensity: 0.6 }),
+      new THREE.MeshStandardMaterial({ color: PALETTE.ridge, emissive: PALETTE.goldDim, emissiveIntensity: 0.6 }),
       all.length,
     );
     const d = new THREE.Object3D();
@@ -152,7 +152,7 @@ function Network() {
 
   const pulse = useRef({ t: -1, seq: 0 });
   const dummy = useMemo(() => new THREE.Object3D(), []);
-  const cPos = useMemo(() => new THREE.Color(PALETTE.bio), []);
+  const cPos = useMemo(() => new THREE.Color(PALETTE.gold), []);
   const cNeg = useMemo(() => new THREE.Color(PALETTE.signal), []);
   const cHot = useMemo(() => new THREE.Color(PALETTE.alarm), []);
   const tmp = useMemo(() => new THREE.Color(), []);
@@ -208,13 +208,13 @@ export function BackpropForge() {
   useEffect(() => ensureForgeWorker(), []);
   const fit = useSession((s) => (s.forge?.accuracy ?? 0) >= 0.97);
   useEffect(() => {
-    if (fit) fx.emit({ kind: "rise", at: [0, 0.4, 0], color: PALETTE.bio, count: 48 });
+    if (fit) fx.emit({ kind: "rise", at: [0, 0.4, 0], color: PALETTE.gold, count: 48 });
   }, [fit]);
 
   return (
     <>
       <hemisphereLight args={[PALETTE.bone, PALETTE.void, 0.8]} />
-      <pointLight position={[0, 5, -3]} intensity={18} color={PALETTE.bio} />
+      <pointLight position={[0, 5, -3]} intensity={18} color={PALETTE.gold} />
       <DecisionFloor />
       <DataPoints />
       <Network />

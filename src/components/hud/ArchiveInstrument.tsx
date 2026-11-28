@@ -10,7 +10,7 @@ export function ArchiveInstrument() {
   const avatarInB = useSession((s) => s.avatarInB);
   const { accA, accB, gapPts, train } = archive;
   const shareB = train.length ? (train.filter((p) => p.group === 1).length / train.length) * 100 : 0;
-  const gapTone = gapPts >= GAP_DETECT_PTS ? "alarm" : gapPts < GAP_FIXED_PTS ? "bio" : "signal";
+  const gapTone = gapPts >= GAP_DETECT_PTS ? "alarm" : gapPts < GAP_FIXED_PTS ? "accent" : "signal";
 
   return (
     <>
@@ -24,7 +24,7 @@ export function ArchiveInstrument() {
         Group B is <span className="font-mono tabular-nums">{shareB.toFixed(0)}%</span> of the training sample
       </p>
 
-      <div className="mt-4 border-t border-line pt-3">
+      <div className="mt-4 border-t border-white/10 pt-3">
         <Dial param="sampleSkew" />
       </div>
 

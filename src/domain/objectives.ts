@@ -11,7 +11,7 @@ export const OBJECTIVES = {
   "hub.boot": {
     zone: "hub",
     xp: 25,
-    label: "Step onto the grid",
+    label: "Open the observatory",
   },
   "valley.first-descent": {
     zone: "loss-valley",
@@ -25,6 +25,13 @@ export const OBJECTIVES = {
     // PEDAGOGY: Breaking the run on purpose is how you learn where η stops working.
     // Fires when a step makes the loss go UP, which small-η GD never does.
     label: "Push η until a step makes the loss go up",
+  },
+  "valley.bullseye": {
+    zone: "loss-valley",
+    xp: 75,
+    // PEDAGOGY: graded by where the run ends, not by trying hard. Only a start inside the
+    // global basin plus a stable η lands here; the descent itself never looks ahead.
+    label: "Settle on the true floor, not just a floor",
   },
   "valley.local-trap": {
     zone: "loss-valley",

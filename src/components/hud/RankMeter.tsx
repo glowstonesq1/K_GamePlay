@@ -12,7 +12,7 @@ export function RankMeter() {
     <section aria-label="Rank" className="pointer-events-auto w-[11rem] text-right sm:w-[14rem]">
       <div className="flex items-baseline justify-end gap-2">
         <span className="text-[13px] text-ash">Rank</span>
-        <span className="font-display text-[34px] font-bold leading-none tabular-nums text-bone sm:text-[44px]">
+        <span className="font-mono text-[34px] font-light leading-none tabular-nums text-bone sm:text-[40px]">
           {level}
         </span>
       </div>
@@ -23,10 +23,10 @@ export function RankMeter() {
         aria-valuemax={levelSpan}
         aria-valuenow={intoLevel}
         aria-valuetext={`${intoLevel} of ${levelSpan} experience to rank ${level + 1}`}
-        className="mt-2 h-1 bg-line"
+        className="mt-2 h-1 overflow-hidden rounded-full bg-white/[0.08]"
       >
         <div
-          className="h-full origin-left bg-bio transition-transform duration-700 ease-[var(--ease-out-quint)]"
+          className="h-full origin-left rounded-full bg-accent shadow-[0_0_10px_var(--world-accent)] transition-transform duration-700 ease-[var(--ease-out-quint)]"
           style={{ transform: `scaleX(${fraction})` }}
         />
       </div>

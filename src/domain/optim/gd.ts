@@ -15,6 +15,9 @@ export interface GdState {
 
 /** ‖∇L‖ below this counts as "at a stationary point". */
 export const GRAD_TOL = 1e-3;
+/** Unstable-run verdict: after this many steps, if more than this share went uphill. */
+export const UNSTABLE_AFTER = 400;
+export const UNSTABLE_RISE_SHARE = 0.3;
 
 export function initGd(L: CompiledLandscape, theta: Vec2): GdState {
   const [gx, gz] = L.grad(theta[0], theta[1]);
@@ -50,17 +53,25 @@ export function gdStep(L: CompiledLandscape, s: GdState, eta: number): GdState {
   const gradNorm = Math.hypot(nx, nz);
   const bound = 2 * L.spec.extent;
 
+  // PEDAGOGY: For η < 2/λ (λ = local curvature) every step lowers the loss. A rise means
+  // the step overshot the valley floor. With a sharp well and a big η the probe gets
+  // ejected and lands in a flatter basin: large learning rates avoid sharp minima.
+  const rises = s.rises + (loss > s.loss + 1e-12 ? 1 : 0);
+  const step = s.step + 1;
+
   let status: ProbeStatus = "running";
   if (!Number.isFinite(loss) || !Number.isFinite(gradNorm) || Math.abs(x) > bound || Math.abs(z) > bound) {
     status = "diverged";
   } else if (gradNorm < GRAD_TOL) {
     status = "converged";
+  } else if (step >= UNSTABLE_AFTER && rises / step > UNSTABLE_RISE_SHARE) {
+    // PEDAGOGY: the bowl keeps L bounded, so an unstable η here never flies off to
+    // infinity; it bounces forever (a 2-cycle in the sharp well, chaos at η ≈ 1). Stable
+    // GD has zero uphill steps by the descent lemma, so a run where a third of all steps
+    // went uphill is not descending at all. We call it, rather than make the player wait.
+    status = "diverged";
   }
-  // PEDAGOGY: For η < 2/λ (λ = local curvature) every step lowers the loss. A rise means
-  // the step overshot the valley floor. With a sharp well and a big η the probe gets
-  // ejected and lands in a flatter basin: large learning rates avoid sharp minima.
-  const rises = s.rises + (loss > s.loss + 1e-12 ? 1 : 0);
-  return { theta: [x, z], loss, gradNorm, step: s.step + 1, status, rises };
+  return { theta: [x, z], loss, gradNorm, step, status, rises };
 }
 
 /** Stability regime of GD near the sharpest point of the landscape. */
