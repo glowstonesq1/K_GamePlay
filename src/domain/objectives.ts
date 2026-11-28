@@ -13,6 +13,18 @@ export const OBJECTIVES = {
     xp: 25,
     label: "Open the observatory",
   },
+  "curiosity.first-model": {
+    zone: "hub",
+    xp: 50,
+    // PEDAGOGY: a model is only as good as its labels. Training here IS the labelling.
+    label: "Label the animals and train your first cat/dog AI",
+  },
+  "curiosity.shortcut": {
+    zone: "hub",
+    xp: 50,
+    // PEDAGOGY: shortcut learning. Fixed with better data, not a cleverer model.
+    label: "Catch your AI's shortcut, then fix it with better examples",
+  },
   "valley.first-descent": {
     zone: "loss-valley",
     xp: 100,

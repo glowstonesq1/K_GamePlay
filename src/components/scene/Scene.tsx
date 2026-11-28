@@ -9,7 +9,8 @@ import * as THREE from "three";
 import type { ZoneId } from "@/domain/zones";
 import { PALETTE } from "@/design/palette";
 import { useGame } from "@/state/gameStore";
-import { sessionStore, useSession } from "@/state/sessionStore";
+import { sessionStore, useSession, type Place } from "@/state/sessionStore";
+import { MultiverseHub } from "@/components/hub/MultiverseHub";
 import { CosmicHub } from "@/components/worlds/CosmicHub";
 import { Particles } from "./fx/Particles";
 import { PostFX } from "./fx/PostFX";
@@ -27,15 +28,20 @@ const VIEWS: Record<ZoneId, { pos: V3; target: V3 }> = {
   "skew-archive": { pos: [0, 14, 12], target: [0, 0, 0.5] },
 };
 
+/** The Multiverse Hub: eye level with the avatar, portals arcing behind it. */
+const MULTIVERSE_VIEW = { pos: [0, 2.6, 9.4] as V3, target: [0, 1.15, -1.5] as V3 };
+
 /**
- * Establishing shot for a zone at this aspect ratio. Portrait screens see less sideways, so
- * the hub dollies back along its view axis until the outer nodes (±5 units) fit.
+ * Establishing shot for a place at this aspect ratio. Portrait screens see less sideways,
+ * so the hubs dolly back along their view axis until the outer nodes / portals fit.
  */
-function viewFor(zone: ZoneId, aspect: number) {
-  const v = VIEWS[zone];
+function viewFor(place: Place, aspect: number) {
+  const isMulti = place.universe === "hub";
+  const v = isMulti ? MULTIVERSE_VIEW : VIEWS[place.zone];
   const pos = new THREE.Vector3(...v.pos);
   const target = new THREE.Vector3(...v.target);
-  if (zone === "hub" && aspect < 1.3) pos.sub(target).multiplyScalar(Math.min(2.4, 1.3 / aspect)).add(target);
+  const wide = isMulti || place.zone === "hub";
+  if (wide && aspect < 1.3) pos.sub(target).multiplyScalar(Math.min(2.4, 1.3 / aspect)).add(target);
   return { pos, target };
 }
 
@@ -63,6 +69,7 @@ function CameraRig() {
   const camera = useThree((s) => s.camera) as THREE.PerspectiveCamera;
   const controls = useThree((s) => s.controls) as OrbitControlsImpl | null;
   const zone = useGame((s) => s.currentZone);
+  const universe = useGame((s) => s.universe);
   const portal = useSession((s) => s.portal);
   const shot = useRef<{
     t0: number;
@@ -82,7 +89,7 @@ function CameraRig() {
   // First paint and plain zone changes (e.g. a restored save): a short settle, no portal.
   useEffect(() => {
     if (sessionStore.getState().portal) return;
-    const v = viewFor(zone, camera.aspect);
+    const v = viewFor({ universe, zone }, camera.aspect);
     shot.current = {
       t0: performance.now(),
       dur: reduce() ? 0 : 1100,
@@ -96,7 +103,7 @@ function CameraRig() {
       done: () => {},
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [zone, controls]);
+  }, [zone, universe, controls]);
 
   useEffect(() => {
     if (!portal) return;
@@ -203,7 +210,11 @@ function PortalShake() {
 }
 
 export function Scene() {
-  const zone = useGame((s) => s.currentZone);
+  const universe = useGame((s) => s.universe);
+  const echo = useGame((s) => s.echo);
+  const inAi = universe === "ai";
+  // Outside the AI universe no world is mounted; the Observatory just hides (see CosmicHub).
+  const zone = useGame((s) => (s.universe === "ai" ? s.currentZone : "hub"));
   const transitioning = useSession((s) => s.portal !== null);
 
   return (
@@ -215,7 +226,7 @@ export function Scene() {
       >
         <color attach="background" args={[PALETTE.void]} />
         <fog attach="fog" args={[PALETTE.void, zone === "hub" ? 40 : 18, zone === "hub" ? 120 : 48]} />
-        {zone === "loss-valley" ? (
+        {!inAi ? null : zone === "loss-valley" ? (
           <Suspense fallback={null}>
             <LossValley />
           </Suspense>
@@ -226,12 +237,14 @@ export function Scene() {
         ) : zone === "skew-archive" ? (
           <SkewArchive />
         ) : null}
-        <CosmicHub active={zone === "hub"} />
+        {/* Curiosity mode borrows the Observatory's sky but none of its doors. */}
+        <CosmicHub active={inAi && zone === "hub" && echo === "architect"} />
+        <MultiverseHub active={universe === "hub"} />
         <Particles />
         <PostFX />
         <OrbitControls
           makeDefault
-          enabled={!transitioning}
+          enabled={!transitioning && universe !== "hub"}
           enableDamping
           maxPolarAngle={zone === "hub" ? Math.PI * 0.62 : Math.PI / 2.15}
           minDistance={zone === "hub" ? 0.3 : 6}

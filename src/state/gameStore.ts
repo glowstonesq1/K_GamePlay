@@ -4,6 +4,22 @@ import { createJSONStorage, persist, type PersistStorage } from "zustand/middlew
 import { isObjectiveId, OBJECTIVES, xpFromCompleted, type ObjectiveId } from "@/domain/objectives";
 import { isZoneId, isZoneUnlocked, ZONES, type ZoneId } from "@/domain/zones";
 import { clampHyperparam, HYPERPARAMS, type Hyperparam } from "@/domain/hyperparams";
+import { isUniverseId, UNIVERSES, type UniverseId } from "@/domain/omnis/universes";
+import { isAvatarId, type AvatarId } from "@/domain/omnis/avatars";
+import {
+  accessoriesOwned,
+  isAccessoryId,
+  isSkillId,
+  SKILL_IDS,
+  SKILLS,
+  skillState,
+  type AccessoryId,
+  type Owned,
+  type SkillId,
+} from "@/domain/omnis/skills";
+
+/** The AI universe's two ways in: the full simulations, or the hands-on primer. */
+export type Echo = "architect" | "curiosity";
 
 /*
  * SCHEMA RULES
@@ -23,6 +39,17 @@ export interface GameState {
   learningRate: number;
   temperature: number;
   sampleSkew: number;
+
+  // OMNIS layer
+  /** Which universe the player is in. "hub" is the Multiverse Hub, above every universe. */
+  universe: UniverseId;
+  avatarId: AvatarId | null;
+  /** Purchased skill nodes. Resonance spent is derived from this, never stored. */
+  owned: Owned;
+  /** Accessories worn. Always a subset of what owned nodes grant. */
+  equipped: AccessoryId[];
+  echo: Echo;
+
   /** False until localStorage has been read. Not persisted. */
   hydrated: boolean;
 }
@@ -34,17 +61,35 @@ export interface GameActions {
   travelTo: (zone: ZoneId) => boolean;
   setHyperparam: (p: Hyperparam, value: number) => void;
   resetProgress: () => void;
+
+  chooseAvatar: (id: AvatarId) => void;
+  /** Spends Resonance. Returns false unless the node is "ready" (gate met and affordable). */
+  unlockSkill: (id: SkillId) => boolean;
+  toggleAccessory: (id: AccessoryId) => void;
+  setEcho: (mode: Echo) => void;
+  /** Returns false for sealed (unbuilt) universes. */
+  enterUniverse: (u: UniverseId) => boolean;
 }
 
 export type GameStore = GameState & GameActions;
 
 type Persisted = Pick<
   GameState,
-  "completed" | "currentZone" | "learningRate" | "temperature" | "sampleSkew"
+  | "completed"
+  | "currentZone"
+  | "learningRate"
+  | "temperature"
+  | "sampleSkew"
+  | "universe"
+  | "avatarId"
+  | "owned"
+  | "equipped"
+  | "echo"
 >;
 
 const STORAGE_KEY = "cogniterra:v1";
-const STORAGE_VERSION = 1;
+// v2 adds the OMNIS layer. v1 saves load fine: missing fields take their defaults.
+const STORAGE_VERSION = 2;
 
 function initialState(): GameState {
   return {
@@ -53,6 +98,11 @@ function initialState(): GameState {
     learningRate: HYPERPARAMS.learningRate.initial,
     temperature: HYPERPARAMS.temperature.initial,
     sampleSkew: HYPERPARAMS.sampleSkew.initial,
+    universe: "hub",
+    avatarId: null,
+    owned: {},
+    equipped: [],
+    echo: "architect",
     hydrated: false,
   };
 }
@@ -72,7 +122,29 @@ export function sanitizePersisted(raw: unknown): Persisted {
 
   const zone = isZoneId(obj.currentZone) ? obj.currentZone : base.currentZone;
 
+  // A skill is only kept if its gate is actually met and its path prerequisite is owned,
+  // and the total spent fits what was earned: a hand-edited save can't buy the tree.
+  const owned: Owned = {};
+  const rawOwned = obj.owned;
+  if (rawOwned !== null && typeof rawOwned === "object") {
+    // Tier order, so a tier-2 node sees its tier-1 prerequisite already replayed.
+    const raw = rawOwned as Record<string, unknown>;
+    for (const k of SKILL_IDS) {
+      if (raw[k] === true && skillState(k, completed, owned).kind === "ready") owned[k] = true;
+    }
+  }
+  const grants = new Set(accessoriesOwned(owned));
+  const equipped = Array.isArray(obj.equipped)
+    ? [...new Set(obj.equipped.filter((a): a is AccessoryId => isAccessoryId(a) && grants.has(a)))]
+    : [];
+  const universe = isUniverseId(obj.universe) && UNIVERSES[obj.universe].playable ? obj.universe : "hub";
+
   return {
+    universe,
+    avatarId: isAvatarId(obj.avatarId) ? obj.avatarId : null,
+    owned,
+    equipped,
+    echo: obj.echo === "curiosity" ? "curiosity" : "architect",
     completed,
     // A tampered save can't drop you into a zone you haven't earned.
     currentZone: isZoneUnlocked(zone, completed) ? zone : "hub",
@@ -110,6 +182,36 @@ export function createGameStore(storage?: PersistStorage<Persisted>) {
         },
 
         resetProgress: () => set({ ...initialState(), hydrated: true }),
+
+        chooseAvatar: (id) => {
+          if (isAvatarId(id) && get().avatarId !== id) set({ avatarId: id });
+        },
+
+        unlockSkill: (id) => {
+          if (!isSkillId(id)) return false;
+          const { completed, owned, equipped } = get();
+          if (skillState(id, completed, owned).kind !== "ready") return false;
+          const acc = SKILLS[id].accessory;
+          // New gear goes straight on: the reward should be visible the moment it's earned.
+          set({ owned: { ...owned, [id]: true }, equipped: equipped.includes(acc) ? equipped : [...equipped, acc] });
+          return true;
+        },
+
+        toggleAccessory: (id) => {
+          if (!isAccessoryId(id) || !accessoriesOwned(get().owned).includes(id)) return;
+          const eq = get().equipped;
+          set({ equipped: eq.includes(id) ? eq.filter((a) => a !== id) : [...eq, id] });
+        },
+
+        setEcho: (mode) => {
+          if ((mode === "architect" || mode === "curiosity") && get().echo !== mode) set({ echo: mode });
+        },
+
+        enterUniverse: (u) => {
+          if (!isUniverseId(u) || !UNIVERSES[u].playable) return false;
+          if (get().universe !== u) set({ universe: u });
+          return true;
+        },
       }),
       {
         name: STORAGE_KEY,
@@ -125,6 +227,11 @@ export function createGameStore(storage?: PersistStorage<Persisted>) {
           learningRate: s.learningRate,
           temperature: s.temperature,
           sampleSkew: s.sampleSkew,
+          universe: s.universe,
+          avatarId: s.avatarId,
+          owned: s.owned,
+          equipped: s.equipped,
+          echo: s.echo,
         }),
         // Future schema changes land here. Unknown versions fall back to sanitize.
         migrate: (persisted) => sanitizePersisted(persisted) as unknown as GameStore,

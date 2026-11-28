@@ -100,3 +100,44 @@ describe("persistence is untrusted", () => {
     }
   });
 });
+
+describe("OMNIS layer", () => {
+  it("loads a v1 save with OMNIS defaults", () => {
+    const st = sanitizePersisted({ completed: { "hub.boot": true }, currentZone: "hub" });
+    expect(st.universe).toBe("hub");
+    expect(st.avatarId).toBeNull();
+    expect(st.owned).toEqual({});
+    expect(st.echo).toBe("architect");
+  });
+  it("drops skills a save can't afford or hasn't earned, and gear it doesn't own", () => {
+    const st = sanitizePersisted({
+      completed: { "hub.boot": true, "valley.first-descent": true },
+      owned: { "logic-1": true, "logic-2": true, "ethics-1": true, "stealth-1": true },
+      equipped: ["lattice-visor", "halo", "nonsense"],
+      universe: "cybersec",
+      avatarId: "mallory",
+    });
+    expect(st.owned).toEqual({ "logic-1": true });
+    expect(st.equipped).toEqual(["lattice-visor"]);
+    expect(st.universe).toBe("hub");
+    expect(st.avatarId).toBeNull();
+  });
+  it("unlocks only ready skills, spends resonance, and auto-equips the reward", () => {
+    const s = fresh();
+    expect(s.getState().unlockSkill("logic-1")).toBe(false);
+    s.getState().completeObjective("valley.first-descent");
+    expect(s.getState().unlockSkill("logic-1")).toBe(true);
+    expect(s.getState().unlockSkill("logic-1")).toBe(false);
+    expect(s.getState().equipped).toEqual(["lattice-visor"]);
+    s.getState().toggleAccessory("lattice-visor");
+    expect(s.getState().equipped).toEqual([]);
+    s.getState().toggleAccessory("halo");
+    expect(s.getState().equipped).toEqual([]);
+  });
+  it("refuses sealed universes", () => {
+    const s = fresh();
+    expect(s.getState().enterUniverse("cybersec")).toBe(false);
+    expect(s.getState().enterUniverse("ai")).toBe(true);
+    expect(s.getState().universe).toBe("ai");
+  });
+});

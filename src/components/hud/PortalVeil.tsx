@@ -3,6 +3,7 @@
 
 import { AnimatePresence, motion } from "motion/react";
 import { WORLD_ACCENT } from "@/design/palette";
+import { UNIVERSES } from "@/domain/omnis/universes";
 import { useSession } from "@/state/sessionStore";
 
 /**
@@ -14,7 +15,12 @@ import { useSession } from "@/state/sessionStore";
 export function PortalVeil() {
   const portal = useSession((s) => s.portal);
   const diving = portal?.phase === "dive";
-  const color = portal ? WORLD_ACCENT[portal.to].hi : "#000";
+  // Into a world: its glow. Between universes: the destination universe's portal colour.
+  const color = !portal
+    ? "#000"
+    : portal.to.universe === "ai" && portal.from.universe === "ai"
+      ? WORLD_ACCENT[portal.to.zone].hi
+      : UNIVERSES[portal.to.universe === "hub" ? portal.from.universe : portal.to.universe].accent;
 
   return (
     <AnimatePresence>

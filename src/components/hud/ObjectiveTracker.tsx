@@ -17,7 +17,10 @@ export function ObjectiveTracker() {
   useEffect(() => {
     if (window.matchMedia("(max-width: 639px)").matches) setOpen(false);
   }, []);
-  const list = IDS.filter((id) => OBJECTIVES[id].zone === zone);
+  const echo = useGame((s) => s.echo);
+  // At the Observatory the two ECHO modes have separate quest logs.
+  const curious = zone === "hub" && echo === "curiosity";
+  const list = IDS.filter((id) => OBJECTIVES[id].zone === zone && id.startsWith("curiosity.") === curious);
   if (list.length === 0) return null;
   const next = list.find((id) => !completed[id]);
 

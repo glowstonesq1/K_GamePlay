@@ -13,6 +13,7 @@ import type { Snapshot } from "@/domain/nn/protocol";
 import { fx } from "@/fx/bus";
 import { gameStore } from "./gameStore";
 import { isZoneUnlocked, type ZoneId } from "@/domain/zones";
+import { UNIVERSES, type UniverseId } from "@/domain/omnis/universes";
 
 /*
  * Transient, per-visit simulation state, one slice per zone. Never persisted: a
@@ -49,9 +50,15 @@ export const REGION_B_X = 0.4;
  *   dive   — camera accelerates into the target node (or pulls away, going home)
  *   emerge — the world has switched; camera settles onto its establishing shot
  */
+/** Where a portal lands: a universe, and the zone inside it (ignored for the Multiverse Hub). */
+export interface Place {
+  universe: UniverseId;
+  zone: ZoneId;
+}
+
 export interface Portal {
-  from: ZoneId;
-  to: ZoneId;
+  from: Place;
+  to: Place;
   /** World-space point to dive into (a hub node). null = pull back instead. */
   at: [number, number, number] | null;
   phase: "dive" | "emerge";
@@ -96,6 +103,8 @@ interface SessionState {
 interface SessionActions {
   /** Start a portal jump. Returns false if locked, already there, or mid-jump. */
   travel: (to: ZoneId, at?: [number, number, number] | null) => boolean;
+  /** Jump between universes: into one from the Multiverse Hub, or back up to it. */
+  travelUniverse: (to: UniverseId, at?: [number, number, number] | null) => boolean;
   /** Called by the camera at the bottom of the dive: switch worlds, begin emerging. */
   commitPortal: () => void;
   endPortal: () => void;
@@ -143,14 +152,25 @@ export const sessionStore = createStore<SessionStore>()((set, get) => ({
 
   travel: (to, at = null) => {
     const g = gameStore.getState();
-    if (get().portal || g.currentZone === to || !isZoneUnlocked(to, g.completed)) return false;
-    set({ portal: { from: g.currentZone, to, at, phase: "dive" }, running: false });
+    if (get().portal || g.universe !== "ai" || g.currentZone === to || !isZoneUnlocked(to, g.completed)) return false;
+    const from = { universe: g.universe, zone: g.currentZone };
+    set({ portal: { from, to: { universe: "ai", zone: to }, at, phase: "dive" }, running: false });
+    return true;
+  },
+  travelUniverse: (to, at = null) => {
+    const g = gameStore.getState();
+    if (get().portal || g.universe === to || !UNIVERSES[to].playable) return false;
+    // Entering a universe lands at its own hub; leaving keeps the zone for next time.
+    const from = { universe: g.universe, zone: g.currentZone };
+    set({ portal: { from, to: { universe: to, zone: to === "hub" ? g.currentZone : "hub" }, at, phase: "dive" }, running: false });
     return true;
   },
   commitPortal: () => {
     const p = get().portal;
     if (!p || p.phase !== "dive") return;
-    gameStore.getState().travelTo(p.to);
+    const g = gameStore.getState();
+    g.enterUniverse(p.to.universe);
+    if (p.to.universe !== "hub") g.travelTo(p.to.zone);
     set({ portal: { ...p, phase: "emerge" } });
   },
   endPortal: () => set({ portal: null }),

@@ -136,7 +136,7 @@ function ConstellationNode({ zone, pos, index, active }: { zone: Exclude<ZoneId,
   // labels in the same commit that unmounts the hub makes React 19 throw removeChild.
   useFrame((_, dt) => {
     const portal = sessionStore.getState().portal;
-    const diving = portal?.to === zone && portal.phase === "dive";
+    const diving = portal?.to.universe === "ai" && portal.to.zone === zone && portal.phase === "dive";
     if (label.current) {
       label.current.style.opacity = portal ? "0" : "";
       label.current.style.visibility = active ? "" : "hidden";
