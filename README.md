@@ -10,7 +10,7 @@ The Observatory is the hub. It is a deep-space starfield with a slowly rotating 
 |---|---|---|
 | The Observatory | Hub | Start here. The four constellation nodes are the doors to the worlds. |
 | The Loss Valley (cyan, `loss-valley`) | Gradient descent | Drop a Gradient Guide on a real loss surface and tune the learning rate η (0.01 to 1.0, log scale, default 0.05) against the stability edge 2/λ_max ≈ 0.254. Show the slope field, race it against a rolling ball (momentum), then reveal the Oracle's full-knowledge route. |
-| The Token Forest (violet, `token-dunes`) | Next-token sampling | Dune height is softmax(logits / T). Change temperature and sample the next word. The 3D scene is still the dune terrain; the forest visual is specified in `docs/worlds-blueprint.md`. |
+| The Token Forest (violet, `token-dunes`) | Next-token sampling | One tree per candidate word; height is softmax(logits / T). Only trees inside the top-p 0.9 nucleus glow. Sample one word, or shake 100 seeds and compare each seed pile with its tree's height. |
 | The Mirror Realm (rose, `skew-archive`) | Dataset bias | Skew the training sample, walk into the under-represented region and see the model's errors; rebalance to close the gap. |
 | The Neural Core (gold, `backprop-forge`) | Backpropagation | Train a from-scratch neural network in a Web Worker. Step once to watch blame flow backwards; train until it separates two moons. |
 
@@ -39,7 +39,7 @@ npm run dev
 npm test
 ```
 
-`npm test` runs the 78-test suite.
+`npm test` runs the 83-test suite.
 
 Static build for GitHub Pages: `STATIC_EXPORT=1 NEXT_PUBLIC_BASE_PATH=/K_GamePlay npm run build` writes `./out`.
 Deploys run from `.github/workflows/pages.yml`.

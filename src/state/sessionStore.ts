@@ -8,6 +8,7 @@ import { oraclePath, type OracleResult } from "@/domain/loss/oracle";
 import { COLD_T, HOT_T, LOGITS, TOKENS } from "@/domain/tokens/corpus";
 import { sampleIndex, softmax } from "@/domain/tokens/sampling";
 import { runArchive, type ArchiveRun } from "@/domain/bias/archive";
+import { BATCH_TOLERANCE_PTS, batchError, type Batch, type ForestEvent } from "@/domain/tokens/lesson";
 import type { Snapshot } from "@/domain/nn/protocol";
 import { fx } from "@/fx/bus";
 import { gameStore } from "./gameStore";
@@ -73,6 +74,10 @@ interface SessionState {
   samples: Sample[];
   sampledCold: boolean;
   sampledHot: boolean;
+  /** Last "Sample 100" result; the forest draws seed piles from it. */
+  batch: Batch | null;
+  /** Last forest action, for the debrief. */
+  forestEvent: ForestEvent | null;
 
   // Backprop Forge
   forge: Snapshot | null;
@@ -105,6 +110,8 @@ interface SessionActions {
   revealOracle: () => void;
 
   sampleToken: (u?: number) => number;
+  /** n independent draws at the current T. `rand` injectable for tests. */
+  sampleBatch: (n?: number, rand?: () => number) => Batch;
 
   setForge: (s: Snapshot) => void;
   setForgeData: (d: { X: number[][]; Y: number[] }) => void;
@@ -160,6 +167,8 @@ export const sessionStore = createStore<SessionStore>()((set, get) => ({
   samples: [],
   sampledCold: false,
   sampledHot: false,
+  batch: null,
+  forestEvent: null,
 
   forge: null,
   forgeData: null,
@@ -215,8 +224,19 @@ export const sessionStore = createStore<SessionStore>()((set, get) => ({
       sampledCold: s.sampledCold || T <= COLD_T,
       sampledHot: s.sampledHot || T >= HOT_T,
     }));
+    set({ forestEvent: { kind: "single", T, id: nextId++ } });
     if (get().sampledCold && get().sampledHot) get().award("dunes.temperature-sweep");
     return index;
+  },
+  sampleBatch: (n = 100, rand = Math.random) => {
+    const T = gameStore.getState().temperature;
+    const p = softmax(LOGITS, T);
+    const counts = new Array<number>(p.length).fill(0);
+    for (let k = 0; k < n; k++) counts[sampleIndex(p, rand())]! += 1;
+    const batch: Batch = { id: nextId++, T, n, counts };
+    set({ batch, forestEvent: { kind: "batch", batch } });
+    if (batchError(batch).gapPts <= BATCH_TOLERANCE_PTS) get().award("forest.law-of-large-numbers");
+    return batch;
   },
 
   /* -------------------------------------------------------- Backprop Forge */

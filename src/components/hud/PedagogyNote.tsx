@@ -5,6 +5,7 @@ import { useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { VALLEY } from "@/domain/loss/presets";
 import { valleyLesson } from "@/domain/optim/lesson";
+import { forestLesson } from "@/domain/tokens/lesson";
 import { useGame } from "@/state/gameStore";
 import { useSession } from "@/state/sessionStore";
 
@@ -17,8 +18,14 @@ export function PedagogyNote() {
   const probe = useSession((s) => s.probe);
   const eta = useGame((s) => s.learningRate);
   const reduce = useReducedMotion();
-  const lesson = zone === "loss-valley" ? valleyLesson(VALLEY, probe, eta) : null;
-  const key = lesson ? `${lesson.kind}-${probe?.step}` : "none";
+  const forestEvent = useSession((s) => s.forestEvent);
+  const lesson =
+    zone === "loss-valley" ? valleyLesson(VALLEY, probe, eta) : zone === "token-dunes" ? forestLesson(forestEvent) : null;
+  const key = !lesson
+    ? "none"
+    : zone === "token-dunes"
+      ? `forest-${forestEvent?.kind === "batch" ? forestEvent.batch.id : forestEvent?.id}`
+      : `${lesson.kind}-${probe?.step}`;
   const [dismissed, setDismissed] = useState<string | null>(null);
 
   const show = lesson && dismissed !== key;
@@ -38,7 +45,9 @@ export function PedagogyNote() {
         >
           <p className="text-[12px] text-ash">What just happened</p>
           <h2 className="mt-1 font-display text-[28px] leading-tight text-bone">{lesson.title}</h2>
-          <p className="mt-3 font-mono text-[15px] text-accent">θ ← θ − η∇L(θ)</p>
+          <p className="mt-3 font-mono text-[15px] text-accent">
+            {zone === "token-dunes" ? "pᵢ = exp(zᵢ/T) / Σⱼ exp(zⱼ/T)" : "θ ← θ − η∇L(θ)"}
+          </p>
           <p className="mt-3 text-[14px] leading-relaxed text-bone/80">{lesson.body}</p>
           <div className="mt-4 flex items-end justify-between gap-4 border-t border-white/10 pt-3">
             <div>

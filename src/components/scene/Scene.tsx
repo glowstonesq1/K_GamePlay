@@ -16,14 +16,14 @@ import { PostFX } from "./fx/PostFX";
 import { BackpropForge } from "./zones/BackpropForge";
 import { LossValley } from "./zones/LossValley";
 import { SkewArchive } from "./zones/SkewArchive";
-import { TokenDunes } from "./zones/TokenDunes";
+import { TokenForest } from "./zones/TokenForest";
 
 type V3 = [number, number, number];
 const VIEWS: Record<ZoneId, { pos: V3; target: V3 }> = {
   hub: { pos: [0, 3.4, 13], target: [0, 1.6, -1.5] },
   "loss-valley": { pos: [13, 13, 15], target: [0, 1.5, 0] },
   "backprop-forge": { pos: [0, 7.5, 12.5], target: [0, 1.6, -1.5] },
-  "token-dunes": { pos: [0, 14, 17], target: [0, 1.5, 0] },
+  "token-dunes": { pos: [0, 11, 22], target: [0, 3.2, -1] },
   "skew-archive": { pos: [0, 14, 12], target: [0, 0, 0.5] },
 };
 
@@ -220,7 +220,7 @@ export function Scene() {
             <LossValley />
           </Suspense>
         ) : zone === "token-dunes" ? (
-          <TokenDunes />
+          <TokenForest />
         ) : zone === "backprop-forge" ? (
           <BackpropForge />
         ) : zone === "skew-archive" ? (

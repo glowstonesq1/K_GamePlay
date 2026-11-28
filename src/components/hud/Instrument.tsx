@@ -126,7 +126,7 @@ function DunesInstrument() {
   return (
     <>
       <dl className="grid grid-cols-2 gap-4">
-        <Readout label="Entropy" value={`${H.toFixed(2)} bits`} size="lg" tone="accent" />
+        <Readout label="Entropy, bits" value={H.toFixed(2)} size="lg" tone="accent" />
         <Readout label={`P("${TOKENS[0]!.text}")`} value={`${(top * 100).toFixed(1)}%`} />
       </dl>
       <div className="mt-4 border-t border-white/10 pt-3">
@@ -136,10 +136,11 @@ function DunesInstrument() {
         <Btn variant="primary" onClick={() => sessionStore.getState().sampleToken()}>
           Sample next word
         </Btn>
-        <span className="text-[13px] text-ash">
-          Try once at T ≤ {COLD_T} and once at T ≥ {HOT_T}
-        </span>
+        <Btn onClick={() => sessionStore.getState().sampleBatch(100)}>Shake 100</Btn>
       </div>
+      <p className="mt-2 text-[13px] text-ash">
+        Try once at T ≤ {COLD_T} and once at T ≥ {HOT_T}. Then shake 100 seeds and compare the piles to the trees.
+      </p>
       <div className="mt-3 text-[15px]" aria-live="polite">
         <span className="text-ash">{PROMPT} </span>
         <span className="font-mono text-signal">{samples[0]?.token ?? "…"}</span>

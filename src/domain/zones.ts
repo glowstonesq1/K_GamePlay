@@ -63,10 +63,10 @@ export const ZONES: Readonly<Record<ZoneId, ZoneDef>> = {
     id: "token-dunes",
     code: "Z3",
     name: "The Token Forest",
-    // PEDAGOGY: Dune height = softmax(logits / T). Low T sharpens one peak,
-    // high T flattens the field. The terrain literally is the sampling distribution.
+    // PEDAGOGY: Tree height = softmax(logits / T). Low T grows one giant, high T levels
+    // the grove. The forest literally is the sampling distribution; seeds are draws.
     concept: "Next-token sampling",
-    brief: "The tallest dune is the likeliest word. Temperature moves the sand.",
+    brief: "Every tree is a word the model might say next. Height is how likely. Temperature reshapes the forest.",
     controls: ["temperature"],
     // Opens alongside Z2 rather than after it: Z2's content lands in Module 6, and a
     // hard chain would wall off Z3 and Z4 until then.
