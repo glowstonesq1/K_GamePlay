@@ -2,7 +2,7 @@
 /* critique: an instrument, not a dashboard. Numbers carry the weight, chrome stays hairline, one signal colour. */
 /* waive 44b, 58: an in-game HUD has no hero or word budget; the 3D scene is the content. */
 /* waive 24b: slider thumb margin-top -10px centres a 22px thumb on a 2px track; geometry, not spacing. */
-/* waive 26b (AreaTitle): non-interactive header; all eight states live on Btn in primitives.tsx. */
+/* waive 26b (AreaTitle, ArchiveInstrument): no own controls; all eight states live on Btn/Dial. */
 /* waive 64 (Instrument sample chips, RankMeter xp): tokens and figures, where mono is the material. */
 @import "tailwindcss";
 

@@ -7,7 +7,9 @@ import { COLD_T, HOT_T, LOGITS, PROMPT, TOKENS } from "@/domain/tokens/corpus";
 import { entropyBits, softmax } from "@/domain/tokens/sampling";
 import { gameStore, useGame } from "@/state/gameStore";
 import { sessionStore, useSession, type Speed } from "@/state/sessionStore";
+import { ArchiveInstrument } from "./ArchiveInstrument";
 import { Dial } from "./Dial";
+import { ForgeInstrument } from "./ForgeInstrument";
 import { Btn, Plate, Readout } from "./primitives";
 
 const STATUS = {
@@ -21,6 +23,8 @@ function ValleyInstrument() {
   const probe = useSession((s) => s.probe);
   const running = useSession((s) => s.running);
   const speed = useSession((s) => s.speed);
+  const showField = useSession((s) => s.showField);
+  const oracle = useSession((s) => s.oracle);
   const s = sessionStore.getState();
   const status = probe ? STATUS[probe.status] : null;
   const [more, setMore] = useState(false);
@@ -46,6 +50,20 @@ function ValleyInstrument() {
           </span>
           {probe!.rises > 0 && <span className="text-signal">Loss went up on {probe!.rises} step{probe!.rises > 1 ? "s" : ""}</span>}
         </p>
+      )}
+
+      {oracle && probe && (
+        <div className="mt-3 border-t border-line pt-3">
+          <dl className="grid grid-cols-2 gap-4">
+            <Readout label="Oracle route" value={`${oracle.length.toFixed(1)} m`} />
+            <Readout label="Global floor" value={oracle.target.loss.toFixed(3)} tone="bio" />
+          </dl>
+          <p className="mt-2 text-[14px] leading-snug text-bone/85">
+            {probe.loss - oracle.target.loss > 0.05
+              ? "Your probe stopped in a shallower basin. The Oracle saw the whole map; gradient descent never does."
+              : "Same floor both ways. Here, following the slope happened to be enough."}
+          </p>
+        </div>
       )}
 
       {/* Phones: dial and secondary controls fold away so the terrain stays visible. */}
@@ -81,6 +99,16 @@ function ValleyInstrument() {
           className={more ? "" : "max-sm:hidden"}
         >
           Roll a ball
+        </Btn>
+        <Btn pressed={showField} onClick={() => s.toggleField()} className={more ? "" : "max-sm:hidden"}>
+          Slope field
+        </Btn>
+        <Btn
+          disabled={!(probe && (probe.status === "converged" || probe.status === "diverged") && !oracle)}
+          onClick={() => s.revealOracle()}
+          className={more ? "" : "max-sm:hidden"}
+        >
+          Reveal the Oracle
         </Btn>
       </div>
     </>
@@ -146,11 +174,8 @@ export function Instrument() {
           </Btn>
         </div>
       )}
-      {(zone === "backprop-forge" || zone === "skew-archive") && (
-        <p className="text-[15px] leading-snug text-bone/85">
-          This zone is still being surveyed. Its instruments come online in a later build.
-        </p>
-      )}
+      {zone === "backprop-forge" && <ForgeInstrument />}
+      {zone === "skew-archive" && <ArchiveInstrument />}
     </Plate>
   );
 }

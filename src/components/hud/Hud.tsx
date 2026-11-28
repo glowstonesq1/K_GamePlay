@@ -4,6 +4,7 @@
 import { useEffect } from "react";
 import { gameStore, useGame } from "@/state/gameStore";
 import { sessionStore } from "@/state/sessionStore";
+import { forge } from "@/workers/forgeClient";
 import { AreaTitle } from "./AreaTitle";
 import { Instrument } from "./Instrument";
 import { ObjectiveTracker } from "./ObjectiveTracker";
@@ -23,6 +24,11 @@ function useHotkeys() {
         s.setRunning(!s.running);
       } else if (zone === "loss-valley" && e.key.toLowerCase() === "r") {
         s.resetProbe();
+      } else if (zone === "backprop-forge" && e.code === "Space") {
+        e.preventDefault();
+        forge.run(!s.forgeRunning);
+      } else if (zone === "backprop-forge" && e.key.toLowerCase() === "n") {
+        forge.step();
       } else if (zone === "token-dunes" && e.key.toLowerCase() === "s") {
         s.sampleToken();
       }

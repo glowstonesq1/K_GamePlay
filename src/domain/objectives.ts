@@ -26,10 +26,22 @@ export const OBJECTIVES = {
     // Fires when a step makes the loss go UP, which small-η GD never does.
     label: "Push η until a step makes the loss go up",
   },
+  "valley.local-trap": {
+    zone: "loss-valley",
+    xp: 75,
+    // PEDAGOGY: the gap between "a minimum" and "the minimum" is the lesson of the zone.
+    label: "Settle in a shallower basin, then reveal the Oracle's route",
+  },
   "forge.chain-rule": {
     zone: "backprop-forge",
     xp: 150,
-    label: "Route the error back to the first layer",
+    // PEDAGOGY: one manual step, watched: forward pass, loss, blame flowing backwards.
+    label: "Take one step by hand and watch the blame flow back",
+  },
+  "forge.fit": {
+    zone: "backprop-forge",
+    xp: 150,
+    label: "Train until the network separates both moons",
   },
   "dunes.temperature-sweep": {
     zone: "token-dunes",
@@ -39,7 +51,13 @@ export const OBJECTIVES = {
   "archive.skew-detected": {
     zone: "skew-archive",
     xp: 200,
-    label: "Find the region the model never learned",
+    label: "Skew the sample, then walk into the region the model got wrong",
+  },
+  "archive.rebalance": {
+    zone: "skew-archive",
+    xp: 150,
+    // PEDAGOGY: the fix is in the data, not in the people. Rebalance and the gap closes.
+    label: "Rebalance the sample until the gap closes",
   },
 } as const satisfies Record<string, { zone: ZoneId; xp: number; label: string }>;
 
