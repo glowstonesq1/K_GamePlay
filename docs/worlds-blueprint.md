@@ -16,7 +16,9 @@ These apply to every world.
 
 ---
 
-## World 2: The Token Forest (violet)
+## World 2: The Token Forest (violet): shipped
+
+> Built as specified, with three deviations: 10 trees (the corpus has 10 tokens, not 12); the seed pile is a bar beside each trunk on the same scale as the tree, rather than a heap; the objective is `forest.law-of-large-numbers` (+80 XP), judged on the tallest tree only.
 
 ```json
 {

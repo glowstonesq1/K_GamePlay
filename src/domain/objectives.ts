@@ -55,6 +55,13 @@ export const OBJECTIVES = {
     xp: 120,
     label: "Sample the same prompt cold and hot",
   },
+  "forest.law-of-large-numbers": {
+    zone: "token-dunes",
+    xp: 80,
+    // PEDAGOGY: one draw is an anecdote; a hundred trace the distribution. ±5 points is
+    // about one standard error at n = 100, so this can take a couple of shakes. On purpose.
+    label: "Shake 100 seeds and land the tallest tree within 5 points of its height",
+  },
   "archive.skew-detected": {
     zone: "skew-archive",
     xp: 200,
